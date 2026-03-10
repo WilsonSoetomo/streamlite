@@ -21,6 +21,9 @@ go.work
 # Runtime data directory
 data/
 
+# Trial script temp file
+.trial-produce-body.json
+
 # IDE
 .idea/
 .vscode/
