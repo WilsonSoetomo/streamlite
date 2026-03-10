@@ -1,0 +1,7 @@
+[
+  {"topic": "events", "key": "user-1", "value": "User signed up"},
+  {"topic": "events", "key": "user-2", "value": "Order placed"},
+  {"topic": "events", "key": "user-1", "value": "User logged in"},
+  {"topic": "events", "key": "user-3", "value": "Page viewed"},
+  {"topic": "events", "key": "user-2", "value": "Order shipped"}
+]
