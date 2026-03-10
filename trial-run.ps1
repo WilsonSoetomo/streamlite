@@ -30,12 +30,35 @@ if (Test-Path $producesFile) {
     }
 }
 
+$eventsDir = Join-Path $dir "data\events"
+if (-not (Test-Path $eventsDir)) { New-Item -ItemType Directory -Path $eventsDir -Force | Out-Null }
+
 Write-Host "=== 3. Fetch from partition 0 ===" -ForegroundColor Cyan
-curl.exe -s "$base/fetch?topic=events&partition=0&offset=0"
+try {
+    $r0 = Invoke-WebRequest -Uri "$base/fetch?topic=events&partition=0&offset=0" -UseBasicParsing
+    $fetch0 = $r0.Content
+} catch {
+    $fetch0 = "error: $_"
+}
+Write-Host $fetch0
+$log0 = Join-Path $eventsDir "fetch-partition-0.log"
+Add-Content -Path $log0 -Value ("# fetch " + (Get-Date -Format "o")) -Encoding utf8
+Add-Content -Path $log0 -Value $fetch0 -Encoding utf8
+Write-Host "  (appended to data/events/fetch-partition-0.log)" -ForegroundColor Gray
 Write-Host ""
 
 Write-Host "=== 4. Fetch from partition 1 ===" -ForegroundColor Cyan
-curl.exe -s "$base/fetch?topic=events&partition=1&offset=0"
+try {
+    $r1 = Invoke-WebRequest -Uri "$base/fetch?topic=events&partition=1&offset=0" -UseBasicParsing
+    $fetch1 = $r1.Content
+} catch {
+    $fetch1 = "error: $_"
+}
+Write-Host $fetch1
+$log1 = Join-Path $eventsDir "fetch-partition-1.log"
+Add-Content -Path $log1 -Value ("# fetch " + (Get-Date -Format "o")) -Encoding utf8
+Add-Content -Path $log1 -Value $fetch1 -Encoding utf8
+Write-Host "  (appended to data/events/fetch-partition-1.log)" -ForegroundColor Gray
 Write-Host ""
 
 Write-Host "Done." -ForegroundColor Green
