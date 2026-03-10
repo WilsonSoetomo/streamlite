@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"log"
 	"net/http"
+	"strings"
 
 	"github.com/wilsonsoetomo/streamlite/internal/protocol"
 )
@@ -29,16 +30,33 @@ func (s *Server) Start(addr string) error {
 	return http.ListenAndServe(addr, nil)
 }
 
+// requireJSON checks Content-Type and returns false with 415 if not application/json.
+func requireJSON(w http.ResponseWriter, r *http.Request) bool {
+	ct := r.Header.Get("Content-Type")
+	if ct != "" && !strings.Contains(ct, "application/json") {
+		http.Error(w, "Content-Type must be application/json", http.StatusUnsupportedMediaType)
+		return false
+	}
+	return true
+}
+
 // handleTopics handles topic creation.
 func (s *Server) handleTopics(w http.ResponseWriter, r *http.Request) {
 	if r.Method != http.MethodPost {
 		http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
 		return
 	}
+	if !requireJSON(w, r) {
+		return
+	}
 
 	var req protocol.CreateTopicRequest
 	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
 		http.Error(w, "Invalid request body: "+err.Error(), http.StatusBadRequest)
+		return
+	}
+	if req.Name == "" {
+		http.Error(w, "field \"name\" is required and must be a non-empty string", http.StatusBadRequest)
 		return
 	}
 
@@ -62,10 +80,21 @@ func (s *Server) handleProduce(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
 		return
 	}
+	if !requireJSON(w, r) {
+		return
+	}
 
 	var req protocol.ProduceRequest
 	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
 		http.Error(w, "Invalid request body: "+err.Error(), http.StatusBadRequest)
+		return
+	}
+	if req.Topic == "" {
+		http.Error(w, "field \"topic\" is required and must be a non-empty string", http.StatusBadRequest)
+		return
+	}
+	if req.Topic == "application/json" {
+		http.Error(w, "field \"topic\" must be the topic name (e.g. \"my-topic\"), not the Content-Type. Use a JSON body: {\"topic\": \"my-topic\", \"key\": \"...\", \"value\": \"...\"}", http.StatusBadRequest)
 		return
 	}
 
